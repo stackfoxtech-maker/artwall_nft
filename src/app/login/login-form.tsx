@@ -43,7 +43,7 @@ export function LoginForm({ next }: { next: string }) {
             name="password"
             type="password"
             required
-            minLength={6}
+            minLength={8}
             autoComplete={mode === "signup" ? "new-password" : "current-password"}
           />
         </div>
@@ -57,6 +57,20 @@ export function LoginForm({ next }: { next: string }) {
       )}
 
       <SubmitButton mode={mode} />
+
+      {mode === "signup" && (
+        <p className="text-xs text-muted-foreground">
+          By creating an account you agree to the{" "}
+          <a className="underline" href="/legal/terms" target="_blank" rel="noreferrer">
+            Terms
+          </a>{" "}
+          and{" "}
+          <a className="underline" href="/legal/privacy" target="_blank" rel="noreferrer">
+            Privacy Policy
+          </a>
+          .
+        </p>
+      )}
 
       <div className="flex flex-wrap justify-between gap-2 text-sm text-muted-foreground">
         {mode !== "signin" && (

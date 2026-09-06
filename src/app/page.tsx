@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 
 export default function HomePage() {
   return (
@@ -27,6 +28,8 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+
+      <SiteFooter />
     </main>
   );
 }

@@ -18,6 +18,13 @@ function emit(level: Level, msg: string, fields: Fields = {}) {
   });
   if (level === "error" || level === "warn") console.error(line);
   else console.log(line);
+
+  if (level === "error" && process.env.SENTRY_DSN) {
+    // Lazy import so the SDK is only loaded when a DSN is configured.
+    import("@sentry/nextjs")
+      .then((Sentry) => Sentry.captureMessage(msg, { level: "error", extra: fields }))
+      .catch(() => {});
+  }
 }
 
 export const log = {
