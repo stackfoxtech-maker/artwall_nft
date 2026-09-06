@@ -111,10 +111,7 @@ export default async function CertificateDetailPage({
                   </Link>
                 </p>
               ) : cert.metadataUri ? (
-                <CertificateMintPanel
-                  certificateId={cert.id}
-                  metadataUri={cert.metadataUri}
-                />
+                <CertificateMintPanel certificateId={cert.id} />
               ) : (
                 <p className="text-sm text-muted-foreground">
                   Metadata is not pinned yet — finish the wizard first.

@@ -2,27 +2,51 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
+import {
+  useAccount,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WalletConnectButton } from "@/components/wallet-connect-button";
-import { MintButton } from "@/components/mint-button";
+import { artwallCoaAbi } from "@/lib/abi";
+import { NFT_CONTRACT_ADDRESS } from "@/lib/wagmi";
 
-type Phase = "idle" | "reporting" | "confirming" | "minted" | "failed";
+type Phase =
+  | "idle"
+  | "authorizing"
+  | "signing"
+  | "confirming"
+  | "minted"
+  | "failed";
+
+interface VoucherResponse {
+  voucher: {
+    to: `0x${string}`;
+    uri: string;
+    royaltyReceiver: `0x${string}`;
+    royaltyFeeBps: number;
+    nonce: `0x${string}`;
+    deadline: number;
+  };
+  signature: `0x${string}`;
+}
 
 export function CertificateMintPanel({
   certificateId,
-  metadataUri,
 }: {
   certificateId: string;
-  metadataUri: string;
 }) {
   const router = useRouter();
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const [bps, setBps] = useState(500);
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
+
+  const { data: txHash, writeContractAsync } = useWriteContract();
+  const { isSuccess: broadcast } = useWaitForTransactionReceipt({ hash: txHash });
   const poll = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => () => clearInterval(poll.current), []);
@@ -31,11 +55,7 @@ export function CertificateMintPanel({
     const res = await fetch(`/api/certificates/${certificateId}/confirm`, {
       method: "POST",
     });
-    const json = (await res.json()) as {
-      status?: string;
-      tokenId?: string;
-      error?: string;
-    };
+    const json = (await res.json()) as { status?: string; error?: string };
     if (json.status === "MINTED") {
       clearInterval(poll.current);
       setPhase("minted");
@@ -43,32 +63,70 @@ export function CertificateMintPanel({
     } else if (json.status === "FAILED") {
       clearInterval(poll.current);
       setPhase("failed");
-      setError(json.error ?? "The mint transaction did not succeed on-chain.");
+      setError(json.error ?? "The mint did not succeed on-chain.");
       router.refresh();
     }
   }, [certificateId, router]);
 
-  // The client only ever reports the broadcast tx; the server confirms it.
-  const onBroadcast = useCallback(
-    async (txHash: `0x${string}`) => {
-      setError(null);
-      setPhase("reporting");
-      const res = await fetch(`/api/certificates/${certificateId}`, {
+  // Report the broadcast tx to the server, then poll /confirm.
+  useEffect(() => {
+    if (!broadcast || !txHash || phase !== "signing") return;
+    (async () => {
+      await fetch(`/api/certificates/${certificateId}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ txHash }),
       });
-      if (!res.ok) {
-        setPhase("failed");
-        setError("Could not record the transaction. It may still confirm — refresh in a minute.");
-        return;
-      }
       setPhase("confirming");
       void confirm();
       poll.current = setInterval(confirm, 4000);
-    },
-    [certificateId, confirm],
-  );
+    })();
+  }, [broadcast, txHash, phase, certificateId, confirm]);
+
+  async function mint() {
+    if (!address) return;
+    setError(null);
+    setPhase("authorizing");
+    try {
+      const res = await fetch(
+        `/api/certificates/${certificateId}/mint-voucher`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            to: address,
+            royaltyReceiver: address,
+            royaltyFeeBps: bps,
+          }),
+        },
+      );
+      if (!res.ok) throw new Error("Could not get a mint authorization.");
+      const { voucher, signature } = (await res.json()) as VoucherResponse;
+
+      setPhase("signing");
+      await writeContractAsync({
+        abi: artwallCoaAbi,
+        address: NFT_CONTRACT_ADDRESS!,
+        functionName: "mintWithVoucher",
+        args: [
+          {
+            to: voucher.to,
+            uri: voucher.uri,
+            royaltyReceiver: voucher.royaltyReceiver,
+            royaltyFeeBps: BigInt(voucher.royaltyFeeBps),
+            nonce: voucher.nonce,
+            deadline: BigInt(voucher.deadline),
+          },
+          signature,
+        ],
+      });
+    } catch (e) {
+      setPhase("failed");
+      setError((e as Error).message.split("\n")[0]);
+    }
+  }
+
+  const busy = phase !== "idle" && phase !== "failed" && phase !== "minted";
 
   return (
     <div className="space-y-4">
@@ -83,27 +141,34 @@ export function CertificateMintPanel({
           max={10000}
           value={bps}
           onChange={(e) => setBps(Number(e.target.value))}
-          disabled={phase !== "idle"}
+          disabled={busy}
         />
         <span className="text-xs text-muted-foreground">
           {(bps / 100).toFixed(2)}% to {address ?? "your connected wallet"}
         </span>
       </div>
 
-      <MintButton
-        metadataUri={metadataUri}
-        royaltyReceiver={address}
-        royaltyFeeBps={bps}
-        disabled={phase !== "idle"}
-        onMinted={onBroadcast}
-      />
+      <Button
+        onClick={mint}
+        disabled={!isConnected || !NFT_CONTRACT_ADDRESS || busy}
+      >
+        {phase === "authorizing"
+          ? "Authorizing…"
+          : phase === "signing"
+            ? "Confirm in wallet…"
+            : phase === "confirming"
+              ? "Verifying on-chain…"
+              : phase === "minted"
+                ? "Minted ✓"
+                : "Mint NFT"}
+      </Button>
 
-      {phase === "reporting" && (
-        <p className="text-xs text-muted-foreground">Recording transaction…</p>
+      {!isConnected && (
+        <p className="text-xs text-muted-foreground">Connect a wallet to mint.</p>
       )}
-      {phase === "confirming" && (
+      {!NFT_CONTRACT_ADDRESS && (
         <p className="text-xs text-muted-foreground">
-          Waiting for on-chain confirmation…
+          Contract address not configured.
         </p>
       )}
       {phase === "minted" && (
