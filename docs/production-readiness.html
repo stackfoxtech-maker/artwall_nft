@@ -1,0 +1,798 @@
+<title>Artwall Production Readiness</title>
+<meta name="description" content="Layer-by-layer assessment of the gap between the Artwall 3.0 prototype and an industry-grade platform." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" />
+
+<style>
+  :root {
+    --ground: #f5f6f9;
+    --surface: #ffffff;
+    --sunken: #eef0f4;
+    --ink: #161a21;
+    --ink-soft: #49515f;
+    --ink-faint: #79828f;
+    --rule: #e1e4ea;
+    --rule-strong: #cbd0d9;
+    --accent: #2b4e77;
+    --accent-line: #2b4e77;
+    --accent-soft: #e9f0f7;
+    --ready: #3c7a55;
+    --ready-bg: #e6f0ea;
+    --caution: #8f6216;
+    --caution-bg: #f4ecd9;
+    --critical: #a23c39;
+    --critical-bg: #f5e4e3;
+    --shadow: 0 1px 2px rgba(20, 26, 38, 0.04), 0 8px 24px -12px rgba(20, 26, 38, 0.12);
+
+    --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+    --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --measure: 68ch;
+    --page: 960px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0f1218;
+      --surface: #161a21;
+      --sunken: #1d222b;
+      --ink: #e6e9ef;
+      --ink-soft: #a3abb9;
+      --ink-faint: #6a7382;
+      --rule: #282e39;
+      --rule-strong: #39414f;
+      --accent: #7ea9d6;
+      --accent-line: #4f7aa8;
+      --accent-soft: #1a2634;
+      --ready: #6cbd8c;
+      --ready-bg: #16261d;
+      --caution: #cea155;
+      --caution-bg: #272413;
+      --critical: #d87c78;
+      --critical-bg: #291918;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0f1218;
+    --surface: #161a21;
+    --sunken: #1d222b;
+    --ink: #e6e9ef;
+    --ink-soft: #a3abb9;
+    --ink-faint: #6a7382;
+    --rule: #282e39;
+    --rule-strong: #39414f;
+    --accent: #7ea9d6;
+    --accent-line: #4f7aa8;
+    --accent-soft: #1a2634;
+    --ready: #6cbd8c;
+    --ready-bg: #16261d;
+    --caution: #cea155;
+    --caution-bg: #272413;
+    --critical: #d87c78;
+    --critical-bg: #291918;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: var(--page);
+    margin: 0 auto;
+    padding: 0 24px 120px;
+  }
+
+  /* ---- masthead ---- */
+  .masthead {
+    padding: 72px 0 40px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 20px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(2.4rem, 6vw, 3.7rem);
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    margin: 0 0 22px;
+    text-wrap: balance;
+    max-width: 15ch;
+  }
+  .standfirst {
+    font-family: var(--font-display);
+    font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 54ch;
+    margin: 0 0 32px;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+  .meta-row b { color: var(--ink-soft); font-weight: 500; }
+
+  /* ---- section scaffolding ---- */
+  .section { padding: 56px 0 8px; }
+  .section-label {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin: 0 0 8px;
+  }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    padding-top: 2px;
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(1.6rem, 3.6vw, 2.15rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .section > p, .lede {
+    max-width: var(--measure);
+    color: var(--ink-soft);
+  }
+  .lede { font-size: 1.05rem; margin-top: 14px; }
+
+  a { color: var(--accent); text-underline-offset: 2px; }
+
+  code, .mono {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--sunken);
+    padding: 0.1em 0.38em;
+    border-radius: 3px;
+    border: 1px solid var(--rule);
+  }
+
+  /* ---- contents ---- */
+  .toc {
+    margin: 40px 0 0;
+    padding: 22px 26px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+  }
+  .toc h3 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+  }
+  .toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    columns: 2;
+    column-gap: 40px;
+  }
+  .toc li {
+    break-inside: avoid;
+    padding: 5px 0;
+    font-size: 14.5px;
+    display: flex;
+    gap: 10px;
+  }
+  .toc li span { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+  .toc a { text-decoration: none; color: var(--ink); }
+  .toc a:hover { color: var(--accent); }
+
+  /* ---- verdict ---- */
+  .verdict {
+    display: grid;
+    gap: 18px;
+    margin-top: 28px;
+  }
+  .verdict p { max-width: var(--measure); margin: 0; }
+  .verdict .drop {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+
+  /* ---- scorecard ---- */
+  .scorecard {
+    margin-top: 34px;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .score-row {
+    display: grid;
+    grid-template-columns: 34px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 13px 20px;
+    border-top: 1px solid var(--rule);
+    font-size: 14.5px;
+  }
+  .score-row:first-child { border-top: none; }
+  .score-row .n { font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint); }
+  .score-row .layer-name { font-weight: 500; }
+  .score-row .layer-name a { text-decoration: none; color: inherit; }
+  .score-row .layer-name a:hover { color: var(--accent); }
+  .score-row .note { color: var(--ink-faint); font-weight: 400; }
+
+  .pill {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 9px 2px;
+    border-radius: 999px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .pill-ready { background: var(--ready-bg); color: var(--ready); border-color: color-mix(in srgb, var(--ready) 30%, transparent); }
+  .pill-harden { background: var(--caution-bg); color: var(--caution); border-color: color-mix(in srgb, var(--caution) 30%, transparent); }
+  .pill-rework { background: var(--critical-bg); color: var(--critical); border-color: color-mix(in srgb, var(--critical) 30%, transparent); }
+
+  /* ---- layer blocks ---- */
+  .layers { display: grid; gap: 4px; margin-top: 24px; }
+  .layer {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 24px 26px;
+  }
+  .layer-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .layer-head .lnum { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+  .layer-head h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.24rem;
+    margin: 0;
+    flex: 1;
+    min-width: 200px;
+  }
+  .layer dl { margin: 0; display: grid; gap: 12px; }
+  .layer dt {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 3px;
+  }
+  .layer dd { margin: 0; max-width: 78ch; color: var(--ink-soft); font-size: 14.7px; }
+  .layer dd.move { color: var(--ink); }
+  .layer dd strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- flow diagram ---- */
+  .flow-figure {
+    margin: 26px 0 8px;
+    padding: 26px 24px 20px;
+    background: var(--sunken);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow-x: auto;
+  }
+  .flow-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+  }
+  .flow-title.bad { color: var(--critical); }
+  .flow-title.good { color: var(--ready); }
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    min-width: 640px;
+  }
+  .flow + .flow { margin-top: 22px; }
+  .flow-step {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    border-radius: 7px;
+    padding: 11px 13px;
+    font-size: 12.5px;
+    line-height: 1.4;
+    position: relative;
+  }
+  .flow-step + .flow-step { margin-left: 26px; }
+  .flow-step + .flow-step::before {
+    content: "→";
+    position: absolute;
+    left: -21px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-faint);
+    font-size: 15px;
+  }
+  .flow-step b {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .flow-step.weak { border-style: dashed; border-color: color-mix(in srgb, var(--critical) 55%, var(--rule-strong)); }
+  .flow-step.weak b { color: var(--critical); }
+  .flow-step.strong { border-color: color-mix(in srgb, var(--ready) 55%, var(--rule-strong)); }
+  .flow-step.strong b { color: var(--ready); }
+
+  /* ---- roadmap ---- */
+  .phases { display: grid; gap: 18px; margin-top: 26px; }
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent-line);
+    border-radius: 8px;
+    padding: 22px 24px;
+  }
+  .phase-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .phase-head h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin: 0;
+  }
+  .phase-head .when {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .phase > p { margin: 0 0 12px; color: var(--ink-soft); font-size: 14.5px; max-width: var(--measure); }
+  .phase ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+  .phase li { font-size: 14px; color: var(--ink-soft); }
+  .phase li strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- tables ---- */
+  .table-scroll { overflow-x: auto; margin-top: 24px; border: 1px solid var(--rule); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+  caption { text-align: left; padding: 14px 18px 0; color: var(--ink-faint); font-size: 12.5px; font-family: var(--font-mono); }
+  th, td { text-align: left; padding: 11px 18px; border-top: 1px solid var(--rule); }
+  thead th {
+    border-top: none;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+  tbody th { font-weight: 500; color: var(--ink); }
+  td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+  tbody tr:hover td, tbody tr:hover th { background: var(--sunken); }
+
+  /* ---- callout ---- */
+  .callout {
+    margin-top: 24px;
+    padding: 18px 22px;
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    border-radius: 9px;
+    font-size: 14.5px;
+    color: var(--ink);
+    max-width: var(--measure);
+  }
+  .callout b { font-weight: 600; }
+
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-size: 13px;
+    color: var(--ink-faint);
+    max-width: var(--measure);
+  }
+
+  :where(a, [tabindex]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+
+  @media (max-width: 620px) {
+    .toc ol { columns: 1; }
+    .score-row { grid-template-columns: 26px 1fr; }
+    .score-row .pill { grid-column: 2; justify-self: start; margin-top: 2px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Engineering Assessment · Artwall 3.0</p>
+    <h1>From working prototype to a platform galleries can trust</h1>
+    <p class="standfirst">Artwall 3.0 mints blockchain-backed certificates of authenticity end to end today. This is a candid read of the thirteen layers between that and something a gallery, an auditor, or an acquirer would sign off on &mdash; and the order to fix them in.</p>
+    <div class="meta-row">
+      <span><b>Assessed</b> 2026-09-06 · commit d6e2ff9</span>
+      <span><b>Stack</b> Next.js 14 · Prisma/Supabase · wagmi + RainbowKit · OZ ERC-721/2981 on Base</span>
+      <span><b>Live</b> localhost + Base Sepolia testnet</span>
+    </div>
+  </header>
+
+  <section class="section" id="verdict">
+    <div class="section-label"><span class="section-num">00</span><h2>The verdict</h2></div>
+    <div class="verdict">
+      <p class="drop">The product is real and the architecture is sound. What makes it a prototype is not missing features &mdash; it is that almost nothing is <em>verified</em>, <em>reproducible</em>, or <em>observed</em>.</p>
+      <p>The certificate wizard, IPFS pinning, database, auth, and an on-chain mint all work. But the database schema was applied by hand and isn't in the repo; the app talks to Postgres as a superuser so row-level security does nothing; the mint is declared complete by the browser with no on-chain confirmation; the contract lets anyone mint anything into your collection; there is no error tracking, no CI, no tests beyond one contract case, and no Terms of Service for a document that carries legal weight. None of these are hard to fix. They just all have to be fixed before real works and real money flow through it.</p>
+      <p>Two changes gate everything else: <b>make the mint path server-authoritative</b> (§01) and <b>get migrations into CI against a dedicated database</b> (§03). Growth work built before those compounds on sand.</p>
+    </div>
+
+    <div class="scorecard" role="table" aria-label="Layer readiness summary">
+      <div class="score-row"><span class="n">01</span><span class="layer-name"><a href="#mint">Mint integrity &amp; chain sync</a></span><span class="pill pill-rework">Rework</span></div>
+      <div class="score-row"><span class="n">02</span><span class="layer-name"><a href="#frontend">Frontend &amp; wizard UX</a></span><span class="pill pill-harden">Harden</span></div>
+      <div class="score-row"><span class="n">03</span><span class="layer-name"><a href="#database">Database &amp; migrations</a></span><span class="pill pill-rework">Rework</span></div>
+      <div class="score-row"><span class="n">04</span><span class="layer-name"><a href="#api">API layer</a></span><span class="pill pill-harden">Harden</span></div>
+      <div class="score-row"><span class="n">05</span><span class="layer-name"><a href="#auth">Auth &amp; identity</a></span><span class="pill pill-harden">Harden</span></div>
+      <div class="score-row"><span class="n">06</span><span class="layer-name"><a href="#contracts">Smart contracts &amp; keys</a></span><span class="pill pill-rework">Rework</span></div>
+      <div class="score-row"><span class="n">07</span><span class="layer-name"><a href="#storage">Storage &amp; IPFS permanence</a></span><span class="pill pill-rework">Rework</span></div>
+      <div class="score-row"><span class="n">08</span><span class="layer-name"><a href="#payments">Payments &amp; multi-tenancy</a></span><span class="pill pill-rework">Not built</span></div>
+      <div class="score-row"><span class="n">09</span><span class="layer-name"><a href="#observability">Observability</a></span><span class="pill pill-rework">Not built</span></div>
+      <div class="score-row"><span class="n">10</span><span class="layer-name"><a href="#security">Security</a></span><span class="pill pill-harden">Harden</span></div>
+      <div class="score-row"><span class="n">11</span><span class="layer-name"><a href="#compliance">Compliance &amp; legal</a></span><span class="pill pill-rework">Not built</span></div>
+      <div class="score-row"><span class="n">12</span><span class="layer-name"><a href="#infra">Infra &amp; CI/CD</a></span><span class="pill pill-rework">Rework</span></div>
+      <div class="score-row"><span class="n">13</span><span class="layer-name"><a href="#testing">Testing &amp; QA</a></span><span class="pill pill-rework">Not built</span></div>
+    </div>
+
+    <div class="toc">
+      <h3>Contents</h3>
+      <ol>
+        <li><span>01</span><a href="#mint">Mint integrity &amp; chain sync</a></li>
+        <li><span>02</span><a href="#frontend">Frontend &amp; wizard UX</a></li>
+        <li><span>03</span><a href="#database">Database &amp; migrations</a></li>
+        <li><span>04</span><a href="#api">API layer</a></li>
+        <li><span>05</span><a href="#auth">Auth &amp; identity</a></li>
+        <li><span>06</span><a href="#contracts">Smart contracts &amp; keys</a></li>
+        <li><span>07</span><a href="#storage">Storage &amp; IPFS permanence</a></li>
+        <li><span>08</span><a href="#payments">Payments &amp; multi-tenancy</a></li>
+        <li><span>09</span><a href="#observability">Observability</a></li>
+        <li><span>10</span><a href="#security">Security</a></li>
+        <li><span>11</span><a href="#compliance">Compliance &amp; legal</a></li>
+        <li><span>12</span><a href="#infra">Infra &amp; CI/CD</a></li>
+        <li><span>13</span><a href="#testing">Testing &amp; QA</a></li>
+        <li><span>&rarr;</span><a href="#roadmap">Roadmap</a></li>
+        <li><span>&rarr;</span><a href="#cost">Cost model at scale</a></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="mint">
+    <div class="section-label"><span class="section-num">01</span><h2>The one flaw that matters most: mint integrity</h2></div>
+    <p class="lede">Everything downstream &mdash; the dashboard, the public verification page, a gallery's trust &mdash; assumes the database knows the truth about what is on-chain. Right now it doesn't. The browser tells it, and the browser is never checked.</p>
+
+    <div class="flow-figure">
+      <p class="flow-title bad">Now &mdash; the client is the source of truth</p>
+      <div class="flow">
+        <div class="flow-step"><b>Browser</b> User clicks Mint; wallet signs <code>mintCertificate()</code></div>
+        <div class="flow-step"><b>Chain</b> Transaction may succeed, fail, or drop</div>
+        <div class="flow-step weak"><b>Browser</b> On success it POSTs <code>{ txHash, tokenId }</code> to the API</div>
+        <div class="flow-step weak"><b>API</b> Checks auth + ownership, then writes <code>status = MINTED</code> &mdash; no on-chain check</div>
+      </div>
+      <p class="flow-title good">Target &mdash; the indexer is the source of truth</p>
+      <div class="flow">
+        <div class="flow-step"><b>Browser</b> User redeems a platform-signed mint voucher; record moves to <code>MINTING</code> only</div>
+        <div class="flow-step"><b>Chain</b> Contract emits <code>CertificateMinted(tokenId, to, uri)</code></div>
+        <div class="flow-step strong"><b>Indexer</b> Ingests the event via RPC webhook; confirms contract, sender, real tokenId</div>
+        <div class="flow-step strong"><b>API</b> Sets <code>MINTED</code> / <code>FAILED</code> from the event; a watchdog reconciles stragglers</div>
+      </div>
+    </div>
+
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">01</span><h3>What breaks today</h3></div>
+        <dl>
+          <div><dt>Forgeable state</dt><dd>Any signed-in owner can <code>PATCH</code> a draft to <strong>MINTED</strong> with a fabricated transaction hash. The verification page will present it as authentic.</dd></div>
+          <div><dt>Stuck records</dt><dd>A genuine mint whose follow-up API call fails (tab closed, network blip) is frozen at <code>METADATA_PINNED</code> forever &mdash; there is no retry and no reconciliation.</dd></div>
+          <div><dt>Blind to reality</dt><dd>Secondary sales, transfers, and burns never reach the database. Provenance &mdash; the entire point &mdash; goes stale the moment the token moves.</dd></div>
+        </dl>
+      </div>
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">01</span><h3>The move</h3><span class="pill pill-rework">P0</span></div>
+        <dl>
+          <div><dt>Server-authoritative lifecycle</dt><dd class="move">The client may only ever set <code>MINTING</code>. A minimal indexer (Alchemy or QuickNode address-activity webhooks to start) confirms <code>CertificateMinted</code> and <code>Transfer</code> events and is the <strong>only</strong> writer of <code>MINTED</code>, <code>FAILED</code>, and every ownership change.</dd></div>
+          <div><dt>Mint authorization</dt><dd class="move">Issue an <strong>EIP-712 signed voucher</strong> from the backend that the user redeems on-chain (they still pay gas), or run a <strong>relayer / paymaster</strong> for a gasless flow. Either way the platform &mdash; not an open contract method &mdash; decides what may be minted.</dd></div>
+          <div><dt>Live verification</dt><dd class="move">The public <code>/verify</code> page reads the current on-chain owner and re-checks that <code>tokenURI</code> still resolves to the metadata hash on record.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="frontend">
+    <div class="section-label"><span class="section-num">02</span><h2>Frontend &amp; wizard UX</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">02</span><h3>Certificate wizard, dashboard, verification pages</h3><span class="pill pill-harden">Harden</span></div>
+        <dl>
+          <div><dt>Now</dt><dd>Wizard state is component <code>useState</code> &mdash; a refresh loses every field and the uploaded image. The Zod schemas exist but aren't wired to the inputs, so there is no inline validation. The component set is five primitives; there are no loading skeletons, empty states, error boundaries, or toasts, and images render through a raw unbounded <code>&lt;img&gt;</code>.</dd></div>
+          <div><dt>Breaks when</dt><dd>A cataloguer enters a 20-field record for a valuable piece and loses it; a gallery does a bulk session and hits an unhandled error with no recovery; a large upload janks the layout on a mid-range laptop.</dd></div>
+          <div><dt>The move</dt><dd class="move">Persist the draft server-side on every step with debounced autosave; enforce Zod per field with <code>aria-live</code> error text; adopt the full design-system component set on Radix primitives with tokens and a working theme toggle; wrap every route segment in an error boundary; drive all mutations through React Query with optimistic UI and rollback; serve images via <code>next/image</code> and an image CDN; gate merges on Lighthouse and <code>axe</code> so the wizard and mint flow stay keyboard- and screen-reader-complete.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="database">
+    <div class="section-label"><span class="section-num">03</span><h2>Database &amp; migrations</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">03</span><h3>Postgres, Prisma, the <code>artwall</code> schema</h3><span class="pill pill-rework">Rework</span></div>
+        <dl>
+          <div><dt>Now</dt><dd>Artwall shares a Supabase project with an unrelated live app, isolated only by a Postgres schema. There is <strong>no <code>prisma/migrations/</code> folder</strong> &mdash; the schema was diffed and applied through an MCP tool, so it can't be reproduced or reviewed. The app connects as the <code>postgres</code> role, which means the row-level security that is switched on does nothing. No point-in-time-recovery test, no seed script, no DB-level check constraints.</dd></div>
+          <div><dt>Breaks when</dt><dd>A second engineer can't stand up the schema; a bad deploy has no reviewed migration to roll back; a single leaked connection string reaches every table with no RLS backstop; <code>basisPoints</code> above 10000 or an impossible status transition slips through because only application code guards it.</dd></div>
+          <div><dt>The move</dt><dd class="move">Move to a <strong>dedicated database</strong> (own Supabase project, or Neon/RDS). Commit real Prisma migration files and run <code>migrate diff</code> in CI against a shadow database on every PR. Create a least-privilege application role and turn RLS on as defense in depth even though the API also authorizes. Pool connections (Supabase pooler or Prisma Accelerate) for serverless. Add check constraints (<code>basisPoints</code> 0&ndash;10000, valid <code>chainId</code>, enum-guarded status). Enable PITR, take nightly logical backups to object storage, and rehearse a restore. Add a read replica once verification traffic grows.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="api">
+    <div class="section-label"><span class="section-num">04</span><h2>API layer</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">04</span><h3>Route handlers: upload, certificates, mint callback</h3><span class="pill pill-harden">Harden</span></div>
+        <dl>
+          <div><dt>Now</dt><dd><code>/api/ipfs/upload</code> is unauthenticated and unmetered &mdash; anyone can exhaust the Pinata quota. Raw error <code>.message</code> strings are returned to clients. No rate limiting, request logging, idempotency keys, or body-size / MIME allow-list. The mint callback trusts client-supplied fields.</dd></div>
+          <div><dt>Breaks when</dt><dd>A scraper burns the storage budget overnight; an internal stack detail leaks in an error; a double-submit creates duplicate certificates; a 200&nbsp;MB upload lands on a serverless function.</dd></div>
+          <div><dt>The move</dt><dd class="move">Require auth on every mutating route including upload; add per-user and per-IP rate limits (Upstash Redis or the platform WAF); attach a correlation id and emit structured logs per request; require idempotency keys on create and mint; enforce a strict size cap and MIME allow-list; map errors to stable codes and never echo internals; add contract tests and publish an OpenAPI spec once galleries integrate.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="auth">
+    <div class="section-label"><span class="section-num">05</span><h2>Auth &amp; identity</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">05</span><h3>Supabase Auth, sessions, the missing org model</h3><span class="pill pill-harden">Harden</span></div>
+        <dl>
+          <div><dt>Now</dt><dd>Email + password and magic link. Email confirmation was turned off during setup; leaked-password protection is off (Supabase's own advisor flags it). No MFA, no auth rate limiting, no session list, no wallet-based sign-in even though a <code>walletAddress</code> column exists. No concept of an organization, so a gallery is just one shared login.</dd></div>
+          <div><dt>Breaks when</dt><dd>A creator handling six-figure works has only a password; a gallery needs five cataloguers with different permissions and an audit trail; an enterprise customer requires SSO.</dd></div>
+          <div><dt>The move</dt><dd class="move">Re-enable email confirmation and leaked-password protection; add TOTP MFA; add <strong>Sign-In-With-Ethereum</strong> so a wallet is a cryptographically-bound login. Introduce an <strong>Organizations</strong> model (org, membership, roles: owner / admin / cataloguer / viewer) and SAML/OIDC SSO for enterprise galleries. Add a security-event audit log and a device/session list with revoke.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="contracts">
+    <div class="section-label"><span class="section-num">06</span><h2>Smart contracts &amp; key management</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">06</span><h3><code>ArtwallCOA</code> &mdash; ERC-721 + ERC-2981</h3><span class="pill pill-rework">Rework</span></div>
+        <dl>
+          <div><dt>Now</dt><dd><code>mintCertificate()</code> has <strong>no access control</strong> &mdash; any address can mint any metadata URI into the collection. <code>owner</code> is a single externally-owned key (the deploy key that briefly sat in <code>.env</code>). No audit, no pause, no upgrade path, no ERC-4906 metadata-update events, no batch mint. One royalty receiver, though the spec calls for automated splits. Deployed to Base Sepolia only.</dd></div>
+          <div><dt>Breaks when</dt><dd>A competitor mints garbage into your collection and it shows on marketplaces; the single owner key is lost or phished; a gallery wants a 60/40 split between artist and estate; you need to correct metadata after a typo and can't.</dd></div>
+          <div><dt>The move</dt><dd class="move">Gate minting behind a <code>MINTER_ROLE</code> backend signer or an EIP-712 voucher redemption. Move <code>owner</code> and admin roles to a <strong>Gnosis Safe multisig</strong>. Commission a professional audit (OZ, Spearbit, Trail of Bits) and run Slither + Foundry invariant tests in CI. Add <code>Pausable</code>, ERC-4906, and enumeration (on-chain or indexed). Decide upgradeability deliberately &mdash; UUPS proxy, or "immutable, new collection per version". For splits, deploy a <strong>0xSplits</strong> or <code>PaymentSplitter</code> per work and set it as the ERC-2981 receiver. Deploy to Base and Polygon mainnet behind a per-chain address registry, with a written key-rotation and incident runbook.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="storage">
+    <div class="section-label"><span class="section-num">07</span><h2>Storage &amp; IPFS permanence</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">07</span><h3>Pinata, the gateway, image handling</h3><span class="pill pill-rework">Rework</span></div>
+        <dl>
+          <div><dt>Now</dt><dd>A single Pinata account on the free tier (1&nbsp;GB), one gateway, no redundancy. "Pinned" is not "permanent" &mdash; if the account lapses, the art is gone. Uploads are stored as-is: no re-encoding, EXIF stripping, virus scan, dimension or size cap, perceptual-hash dedupe, or moderation. Nothing checks that the on-chain <code>tokenURI</code> still matches what the database believes.</dd></div>
+          <div><dt>Breaks when</dt><dd>Billing lapses and every certificate's image 404s; a malicious file is served from your gateway; the same stolen image is certified twice; a metadata file is quietly altered after minting.</dd></div>
+          <div><dt>The move</dt><dd class="move">Pin to Pinata <strong>and</strong> a second provider (web3.storage / Filebase), and mirror to <strong>Arweave</strong> (pay-once permanence) or Filecoin deals for the canonical copy. Process every upload: re-encode, strip metadata, generate responsive derivatives to an image CDN, ClamAV scan, and route to a moderation queue. Store the content hash and re-verify <code>tokenURI</code> against it on every verification view. Run a dedicated gateway on a custom domain with caching and cost alerts.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="payments">
+    <div class="section-label"><span class="section-num">08</span><h2>Payments &amp; multi-tenancy</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">08</span><h3>Billing, plans, seats, metering</h3><span class="pill pill-rework">Not built</span></div>
+        <dl>
+          <div><dt>Now</dt><dd>Nothing. The spec describes subscription tiers and B2B gallery accounts; there is no billing, plan enforcement, seat management, or usage metering.</dd></div>
+          <div><dt>Breaks when</dt><dd>The moment you want revenue, or to cap a free user's storage and chains.</dd></div>
+          <div><dt>The move</dt><dd class="move">Stripe Billing with plans (free / creator / gallery / enterprise) and metered add-ons (extra IPFS storage, extra chains). Seats tied to the Organizations model; entitlement checks in middleware; dunning, invoices, and Stripe Tax. A usage pipeline recording certificates minted, storage consumed, and API calls.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="observability">
+    <div class="section-label"><span class="section-num">09</span><h2>Observability</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">09</span><h3>Logs, errors, traces, metrics, uptime</h3><span class="pill pill-rework">Not built</span></div>
+        <dl>
+          <div><dt>Now</dt><dd><code>console.log</code> and <code>console.error</code>. No error tracking, tracing, metrics, uptime checks, or product analytics. When a mint fails in production you will not know it happened.</dd></div>
+          <div><dt>Breaks when</dt><dd>Immediately &mdash; the first production incident is invisible until a user emails.</dd></div>
+          <div><dt>The move</dt><dd class="move">Sentry across frontend, API, and edge with release health. Structured JSON logs shipped to a store (Axiom, Better Stack, Datadog). OpenTelemetry traces spanning API &rarr; DB &rarr; RPC &rarr; IPFS. RED metrics with dashboards and on-call alerts against explicit SLOs &mdash; verification p95, mint-confirmation lag, IPFS pin success rate. Synthetic checks on the sign-up &rarr; catalogue &rarr; mint path. PostHog for the wizard funnel.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="security">
+    <div class="section-label"><span class="section-num">10</span><h2>Security</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">10</span><h3>Secrets, headers, abuse, supply chain</h3><span class="pill pill-harden">Harden</span></div>
+        <dl>
+          <div><dt>Now</dt><dd>Secrets live in a local <code>.env</code>; a deploy private key was pasted into it as plaintext. No Content-Security-Policy or security headers. Error messages leak internals. No rate limiting, no dependency scanning, no secret scanning, an unauthenticated upload route, and no CSRF/origin guard on cookie-authenticated POST routes.</dd></div>
+          <div><dt>Breaks when</dt><dd>The deploy key is exposed and drains the wallet; a dependency CVE ships to production unnoticed; a cross-site POST creates certificates as a logged-in user.</dd></div>
+          <div><dt>The move</dt><dd class="move">Move secrets to a manager (encrypted platform env + Doppler / 1Password) and <strong>rotate the deploy key now</strong>; signing should go through a dedicated deployer or a KMS/hardware signer, never a raw key in the tree. Add a strict CSP, HSTS, <code>X-Content-Type-Options</code>, <code>Referrer-Policy</code>, <code>Permissions-Policy</code>. Enforce <code>SameSite</code> plus origin checks or CSRF tokens on mutating routes. Gate CI on <code>npm audit</code> / Snyk and run gitleaks pre-commit and in CI. Publish a <code>SECURITY.md</code>, run a pen test before public launch, and open a bug bounty after.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="compliance">
+    <div class="section-label"><span class="section-num">11</span><h2>Compliance &amp; legal</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">11</span><h3>Terms, privacy, an immutable ledger vs. the right to erasure</h3><span class="pill pill-rework">Not built</span></div>
+        <dl>
+          <div><dt>Now</dt><dd>No Terms of Service, Privacy Policy, or stated legal basis for processing &mdash; for a document that makes an authenticity claim with commercial weight.</dd></div>
+          <div><dt>Breaks when</dt><dd>An EU artist files a data-subject request; a disputed-authorship takedown arrives; a high-value sale triggers KYC/AML expectations; a tax authority asks how royalty income is reported.</dd></div>
+          <div><dt>The move</dt><dd class="move">Terms of Service and Privacy Policy, plus a plain statement of what the certificate legally asserts and does not. A GDPR/CCPA program with a data-subject-request workflow &mdash; and a deliberate design for erasure against an immutable chain: keep all PII off-chain in deletable storage and commit only hashes on-chain. A records-retention schedule. OFAC/sanctions screening on wallet addresses and KYC thresholds for high-value works. Artist IP warranty and a DMCA-style takedown process. A WCAG 2.2 AA conformance statement.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="infra">
+    <div class="section-label"><span class="section-num">12</span><h2>Infrastructure &amp; CI/CD</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">12</span><h3>Pipeline, environments, migrations, DR</h3><span class="pill pill-rework">Rework</span></div>
+        <dl>
+          <div><dt>Now</dt><dd>Everything is manual. No CI, no automated tests in a pipeline, no preview environments, migrations applied by hand, no rollback plan, single region.</dd></div>
+          <div><dt>Breaks when</dt><dd>A broken build reaches production because nothing checked it; a migration corrupts data with no tested rollback; the region has an outage and there is no runbook.</dd></div>
+          <div><dt>The move</dt><dd class="move">GitHub Actions on every PR: typecheck, lint, unit, contract tests, <code>migrate diff</code> check, build, and Playwright E2E. A preview deploy per PR with an ephemeral Neon branch database. Migrations gated and applied on deploy with a rehearsed rollback. A staging environment mirroring production. Infrastructure-as-code for the non-Vercel pieces (indexer, workers). A public status page and a disaster-recovery runbook with explicit RPO/RTO targets.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="testing">
+    <div class="section-label"><span class="section-num">13</span><h2>Testing &amp; QA</h2></div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-head"><span class="lnum">13</span><h3>Coverage across contract, API, UI, E2E</h3><span class="pill pill-rework">Not built</span></div>
+        <dl>
+          <div><dt>Now</dt><dd>One Hardhat test. Zero API, component, or end-to-end tests. No CI to run them in.</dd></div>
+          <div><dt>Breaks when</dt><dd>Any refactor &mdash; there is no safety net, so every change is a gamble and regressions ship silently.</dd></div>
+          <div><dt>The move</dt><dd class="move">Vitest for <code>lib</code> and API route handlers; React Testing Library for the wizard and mint panel; Playwright covering sign-up &rarr; catalogue &rarr; mint against a local Anvil chain. Expand the contract suite with Foundry fuzz and invariant tests plus gas snapshots. A coverage gate, a staging smoke suite, and a load test on the verification endpoint.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="roadmap">
+    <div class="section-label"><span class="section-num">&rarr;</span><h2>Roadmap</h2></div>
+    <p class="lede">Three phases, in order. P0 is not optional and not parallelizable with growth work &mdash; it is the foundation the rest sits on.</p>
+    <div class="phases">
+      <div class="phase">
+        <div class="phase-head"><h3>P0 &mdash; Harden</h3><span class="when">~4&ndash;6 weeks · 2 engineers</span></div>
+        <p>Make the platform trustworthy and reproducible. Nothing here is user-visible; all of it is load-bearing.</p>
+        <ul>
+          <li><strong>Own database</strong> + committed Prisma migrations running in CI against a shadow DB</li>
+          <li><strong>Server-authoritative mint</strong>: minimal webhook indexer, client can only set <code>MINTING</code></li>
+          <li><strong>Contract access control</strong>: <code>MINTER_ROLE</code> or EIP-712 voucher; owner &rarr; Gnosis Safe; rotate the deploy key</li>
+          <li>Least-privilege DB role + RLS on; secrets manager; CSP and security headers; error-message hygiene</li>
+          <li>Auth hardening: confirm email, leaked-password protection, MFA, rate limits</li>
+          <li>Sentry + structured logs; Playwright happy-path E2E; GitHub Actions pipeline</li>
+          <li>Terms of Service and Privacy Policy published</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="phase-head"><h3>P1 &mdash; Scale</h3><span class="when">~8&ndash;12 weeks · 3&ndash;4 engineers + design</span></div>
+        <p>Make it a product galleries pay for and that survives real volume.</p>
+        <ul>
+          <li>Full design system; wizard autosave and inline validation; theme toggle; error/empty states</li>
+          <li><strong>Organizations</strong>: teams, roles, SSO; Stripe billing and entitlement enforcement</li>
+          <li><strong>Storage permanence</strong>: dual-pin + Arweave; image pipeline; moderation queue</li>
+          <li><strong>Full indexer</strong> (Ponder or subgraph): transfer sync, drift reconciliation, live verification</li>
+          <li>Contract <strong>audit</strong>; Base + Polygon mainnet deploy; per-chain registry; royalty splitters</li>
+          <li>OpenTelemetry tracing; SLO dashboards; on-call; load testing</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="phase-head"><h3>P2 &mdash; Grow</h3><span class="when">ongoing</span></div>
+        <p>Expand surface area once the core is solid.</p>
+        <ul>
+          <li>Public verification API + gallery integrations (OpenAPI, webhooks); bulk back-catalogue import</li>
+          <li>NFC provisioning flow with tamper-evidence; marketplace / listing hooks</li>
+          <li>Internationalization; a mobile capture app; gallery-facing analytics and reporting</li>
+          <li>SOC&nbsp;2 Type&nbsp;II</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="cost">
+    <div class="section-label"><span class="section-num">&rarr;</span><h2>Cost model at scale</h2></div>
+    <p class="lede">Rough monthly run-rate at three volumes, assuming Base (L2) for minting and the platform subsidizing gas via a paymaster. Figures are order-of-magnitude, not quotes.</p>
+    <div class="table-scroll">
+      <table>
+        <caption>USD / month unless noted · one-time costs called out</caption>
+        <thead>
+          <tr><th scope="col">Line item</th><th scope="col">~1k certs/mo</th><th scope="col">~50k/mo</th><th scope="col">~500k/mo</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Hosting (Vercel or equiv.)</th><td class="num">20</td><td class="num">300&ndash;500</td><td class="num">1,500&ndash;3,000</td></tr>
+          <tr><th scope="row">Postgres (Pro + replica)</th><td class="num">25</td><td class="num">150&ndash;350</td><td class="num">700&ndash;1,200</td></tr>
+          <tr><th scope="row">IPFS pinning + gateway</th><td class="num">20</td><td class="num">100&ndash;200</td><td class="num">400&ndash;800</td></tr>
+          <tr><th scope="row">Arweave permanence</th><td class="num">~5</td><td class="num">~150</td><td class="num">~1,200</td></tr>
+          <tr><th scope="row">RPC (Alchemy / QuickNode)</th><td class="num">0</td><td class="num">50&ndash;200</td><td class="num">500&ndash;1,500</td></tr>
+          <tr><th scope="row">Indexer host</th><td class="num">10</td><td class="num">50</td><td class="num">200&ndash;400</td></tr>
+          <tr><th scope="row">Error tracking + logs + analytics</th><td class="num">30</td><td class="num">150&ndash;300</td><td class="num">600&ndash;1,200</td></tr>
+          <tr><th scope="row">Transactional email</th><td class="num">0</td><td class="num">20</td><td class="num">100</td></tr>
+          <tr><th scope="row">Subsidized gas (~$0.0005/mint, Base)</th><td class="num">~1</td><td class="num">~25</td><td class="num">~250</td></tr>
+          <tr><th scope="row">Run-rate subtotal</th><td class="num">150&ndash;250</td><td class="num">1,100&ndash;2,300</td><td class="num">6,000&ndash;11,000</td></tr>
+          <tr><th scope="row">Contract audit (one-time)</th><td class="num">15,000&ndash;60,000</td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
+          <tr><th scope="row">Pen test (one-time, pre-launch)</th><td class="num">8,000&ndash;25,000</td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <b>The dominant cost is people, not infrastructure.</b> Even at 500k certificates a month the platform runs for roughly $10k. P0 and P1 are ~4&ndash;6 engineer-months plus a one-time audit &mdash; that, not hosting, is the real budget line.
+    </div>
+  </section>
+
+  <footer>
+    Prepared from a direct read of the Artwall 3.0 codebase at commit d6e2ff9 (2026-09-06). Effort and cost figures are planning estimates. The single highest-leverage next step is §01 &mdash; move mint confirmation off the client &mdash; followed by §03, migrations in CI.
+  </footer>
+
+</div>
