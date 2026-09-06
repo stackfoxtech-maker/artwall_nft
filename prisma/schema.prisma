@@ -87,21 +87,25 @@ model Certificate {
   dimensions   String?
   year         Int?
   editionInfo  String?
-  imageCid     String?           // ipfs CID of the artwork file
-  metadataCid  String?           // ipfs CID of the ERC-721 metadata JSON
-  metadataUri  String?           // ipfs://<metadataCid>
+  imageCid       String?         // ipfs CID of the artwork file
+  metadataCid    String?         // ipfs CID of the ERC-721 metadata JSON
+  metadataUri    String?         // ipfs://<metadataCid>
+  metadataSha256 String?         // hash of the pinned metadata JSON, for verification
 
   // Step 3 — Enhance
   privateNote      String?
   unlockableReward String?
   physicalLinkId   String?       @unique // QR / NFC token
 
-  // Mint result
-  chainId      Int?
-  contractAddr String?
-  tokenId      String?
-  txHash       String?
-  mintedAt     DateTime?
+  // Mint lifecycle — only an on-chain confirmation may set MINTED/FAILED
+  mintNonce      String?         @unique // ties an EIP-712 mint voucher to this cert
+  mintRequestedAt DateTime?      // client reported a tx was broadcast
+  chainId        Int?
+  contractAddr   String?
+  tokenId        String?
+  txHash         String?         @unique
+  mintError      String?
+  mintedAt       DateTime?
 
   ownerId      String            @db.Uuid
   owner        User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)

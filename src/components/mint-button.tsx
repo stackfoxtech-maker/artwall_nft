@@ -14,6 +14,7 @@ interface MintButtonProps {
   metadataUri: string;
   royaltyReceiver: `0x${string}` | undefined;
   royaltyFeeBps: number;
+  disabled?: boolean;
   onMinted?: (txHash: `0x${string}`) => void;
 }
 
@@ -21,6 +22,7 @@ export function MintButton({
   metadataUri,
   royaltyReceiver,
   royaltyFeeBps,
+  disabled: externallyDisabled,
   onMinted,
 }: MintButtonProps) {
   const { address, isConnected } = useAccount();
@@ -34,6 +36,7 @@ export function MintButton({
   }, [isSuccess, hash, onMinted]);
 
   const disabled =
+    externallyDisabled ||
     !isConnected ||
     !address ||
     !NFT_CONTRACT_ADDRESS ||
