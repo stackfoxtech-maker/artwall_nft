@@ -20,10 +20,21 @@ and minting **NFTs** for physical and digital art.
 npm install
 cp .env.example .env          # fill in Supabase, Pinata, WalletConnect
 npm run prisma:generate
-npm run prisma:migrate         # creates tables in Supabase (uses DIRECT_URL)
-# then run supabase/schema.sql in the Supabase SQL editor (trigger + RLS)
 npm run dev
 ```
+
+### Database
+
+Artwall uses a dedicated **`artwall`** Postgres schema (so it can share a Supabase
+project with other apps). The schema, tables, and auth→User trigger are already
+applied to project `cfyesjrdhyxrjbrffajn`.
+
+The only thing missing from `.env` is the DB password — get it from
+**Supabase Dashboard → Project Settings → Database** (or reset it there) and
+replace `[YOUR-DB-PASSWORD]` in `DATABASE_URL` and `DIRECT_URL`.
+
+To change the schema later: edit `prisma/schema.prisma`, then
+`npm run prisma:migrate` (needs `DIRECT_URL` with the password).
 
 ### Contracts
 

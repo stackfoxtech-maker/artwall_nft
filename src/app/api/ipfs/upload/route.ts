@@ -11,12 +11,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const upload = (await pinata.upload.file(file)) as {
-      IpfsHash?: string;
-      cid?: string;
-    };
-    const cid = upload.cid ?? upload.IpfsHash;
-    return NextResponse.json({ cid });
+    const upload = await pinata.upload.public.file(file);
+    return NextResponse.json({ cid: upload.cid });
   } catch (err) {
     console.error("[ipfs/upload]", err);
     return NextResponse.json(

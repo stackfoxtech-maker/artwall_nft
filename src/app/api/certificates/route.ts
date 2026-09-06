@@ -45,11 +45,8 @@ export async function POST(req: NextRequest) {
       ],
     };
 
-    const pinned = (await pinata.upload.json(metadata)) as {
-      IpfsHash?: string;
-      cid?: string;
-    };
-    const metadataCid = pinned.cid ?? pinned.IpfsHash ?? "";
+    const pinned = await pinata.upload.public.json(metadata);
+    const metadataCid = pinned.cid;
     const metadataUri = `ipfs://${metadataCid}`;
 
     const cert = await prisma.certificate.create({

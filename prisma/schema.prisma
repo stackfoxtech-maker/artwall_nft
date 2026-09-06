@@ -2,19 +2,25 @@
 // Auth is handled by Supabase Auth; `User.id` mirrors `auth.users.id` (uuid).
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
+// Artwall lives in its own `artwall` schema so it can share a Supabase project
+// with other apps without colliding on the `public` schema.
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas   = ["artwall"]
 }
 
 enum Privacy {
   PUBLIC
   PRIVATE
   UNLISTED
+
+  @@schema("artwall")
 }
 
 enum ObjectType {
@@ -24,6 +30,8 @@ enum ObjectType {
   PHOTOGRAPH
   SCULPTURE
   OTHER
+
+  @@schema("artwall")
 }
 
 enum CertificateStatus {
@@ -32,6 +40,8 @@ enum CertificateStatus {
   MINTING
   MINTED
   FAILED
+
+  @@schema("artwall")
 }
 
 model User {
@@ -44,6 +54,8 @@ model User {
 
   collections  Collection[]
   certificates Certificate[]
+
+  @@schema("artwall")
 }
 
 model Collection {
@@ -57,6 +69,7 @@ model Collection {
   certificates Certificate[]
 
   @@index([ownerId])
+  @@schema("artwall")
 }
 
 model Certificate {
@@ -103,6 +116,7 @@ model Certificate {
   @@index([ownerId])
   @@index([collectionId])
   @@index([status])
+  @@schema("artwall")
 }
 
 model RoyaltySplit {
@@ -114,4 +128,5 @@ model RoyaltySplit {
   label         String?
 
   @@index([certificateId])
+  @@schema("artwall")
 }
