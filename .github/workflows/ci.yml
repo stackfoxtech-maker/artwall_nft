@@ -81,3 +81,36 @@ jobs:
       - run: npm ci
       - run: npx hardhat compile
       - run: npx hardhat test
+
+  e2e:
+    name: E2E (smoke)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: e2e
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/e2e?schema=artwall
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/e2e?schema=artwall
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: e2e-placeholder
+      NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: e2e-placeholder
+      NEXT_PUBLIC_DEFAULT_CHAIN_ID: "84532"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate && npx prisma migrate deploy
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      # playwright.config webServer starts `next start -p 3100` and waits for it
+      - run: npx playwright test
