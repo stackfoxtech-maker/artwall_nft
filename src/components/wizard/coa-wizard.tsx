@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import type { WizardData } from "./types";
 const STEPS = ["Define", "Create", "Enhance"] as const;
 
 export function CoaWizard() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WizardData>({
     privacy: "PUBLIC",
@@ -47,11 +49,14 @@ export function CoaWizard() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(data),
       });
+      if (res.status === 401) {
+        window.location.href = "/login?next=/certificates/new";
+        return;
+      }
       if (!res.ok) throw new Error(await res.text());
       const json = (await res.json()) as { id: string; metadataUri: string };
-      setResult(
-        `Draft saved (${json.id}). Metadata: ${json.metadataUri}. Next: connect a wallet and mint.`,
-      );
+      setResult("Draft saved — taking you to the mint step…");
+      router.push(`/certificates/${json.id}`);
     } catch (e) {
       alert(`Save failed: ${(e as Error).message}`);
     } finally {

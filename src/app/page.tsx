@@ -1,19 +1,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { WalletConnectButton } from "@/components/wallet-connect-button";
+import { SiteHeader } from "@/components/site-header";
 
 export default function HomePage() {
   return (
     <main className="min-h-screen">
-      <header className="container flex h-16 items-center justify-between">
-        <span className="text-lg font-semibold">Artwall 3.0</span>
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard">
-            <Button variant="ghost">Dashboard</Button>
-          </Link>
-          <WalletConnectButton />
-        </div>
-      </header>
+      <SiteHeader />
 
       <section className="container flex flex-col items-center gap-6 py-24 text-center">
         <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">

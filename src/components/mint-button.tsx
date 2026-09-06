@@ -1,13 +1,18 @@
 "use client";
 
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useEffect } from "react";
+import {
+  useAccount,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import { Button } from "@/components/ui/button";
 import { artwallCoaAbi } from "@/lib/abi";
 import { NFT_CONTRACT_ADDRESS } from "@/lib/wagmi";
 
 interface MintButtonProps {
   metadataUri: string;
-  royaltyReceiver: `0x${string}`;
+  royaltyReceiver: `0x${string}` | undefined;
   royaltyFeeBps: number;
   onMinted?: (txHash: `0x${string}`) => void;
 }
@@ -24,10 +29,16 @@ export function MintButton({
     hash,
   });
 
-  if (isSuccess && hash) onMinted?.(hash);
+  useEffect(() => {
+    if (isSuccess && hash) onMinted?.(hash);
+  }, [isSuccess, hash, onMinted]);
 
   const disabled =
-    !isConnected || !address || !NFT_CONTRACT_ADDRESS || isPending || isConfirming;
+    !isConnected ||
+    !address ||
+    !NFT_CONTRACT_ADDRESS ||
+    isPending ||
+    isConfirming;
 
   return (
     <div className="space-y-2">
@@ -41,7 +52,7 @@ export function MintButton({
             args: [
               address!,
               metadataUri,
-              royaltyReceiver,
+              (royaltyReceiver ?? address)!,
               BigInt(royaltyFeeBps),
             ],
           })
@@ -51,14 +62,25 @@ export function MintButton({
           ? "Confirm in wallet…"
           : isConfirming
             ? "Minting…"
-            : "Mint NFT"}
+            : isSuccess
+              ? "Minted ✓"
+              : "Mint NFT"}
       </Button>
+      {!isConnected && (
+        <p className="text-xs text-muted-foreground">
+          Connect a wallet to mint.
+        </p>
+      )}
       {!NFT_CONTRACT_ADDRESS && (
         <p className="text-xs text-muted-foreground">
           Set NEXT_PUBLIC_NFT_CONTRACT_ADDRESS after deploying the contract.
         </p>
       )}
-      {error && <p className="text-xs text-destructive">{error.message}</p>}
+      {error && (
+        <p className="text-xs text-destructive">
+          {error.message.split("\n")[0]}
+        </p>
+      )}
     </div>
   );
 }
