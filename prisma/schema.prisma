@@ -1,0 +1,117 @@
+// Prisma schema for Artwall NFT / COA platform
+// Auth is handled by Supabase Auth; `User.id` mirrors `auth.users.id` (uuid).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Privacy {
+  PUBLIC
+  PRIVATE
+  UNLISTED
+}
+
+enum ObjectType {
+  PHYSICAL_ARTWORK
+  DIGITAL_ARTWORK
+  EDITION
+  PHOTOGRAPH
+  SCULPTURE
+  OTHER
+}
+
+enum CertificateStatus {
+  DRAFT        // wizard in progress
+  METADATA_PINNED
+  MINTING
+  MINTED
+  FAILED
+}
+
+model User {
+  id          String        @id @db.Uuid // = auth.users.id
+  email       String?       @unique
+  displayName String?
+  walletAddress String?     @unique
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  collections  Collection[]
+  certificates Certificate[]
+}
+
+model Collection {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String        @db.Uuid
+  owner       User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+
+  certificates Certificate[]
+
+  @@index([ownerId])
+}
+
+model Certificate {
+  id           String            @id @default(cuid())
+  status       CertificateStatus @default(DRAFT)
+
+  // Step 1 — Define
+  creatorName  String
+  privacy      Privacy           @default(PUBLIC)
+  objectType   ObjectType        @default(PHYSICAL_ARTWORK)
+
+  // Step 2 — Create
+  title        String
+  medium       String?
+  dimensions   String?
+  year         Int?
+  editionInfo  String?
+  imageCid     String?           // ipfs CID of the artwork file
+  metadataCid  String?           // ipfs CID of the ERC-721 metadata JSON
+  metadataUri  String?           // ipfs://<metadataCid>
+
+  // Step 3 — Enhance
+  privateNote      String?
+  unlockableReward String?
+  physicalLinkId   String?       @unique // QR / NFC token
+
+  // Mint result
+  chainId      Int?
+  contractAddr String?
+  tokenId      String?
+  txHash       String?
+  mintedAt     DateTime?
+
+  ownerId      String            @db.Uuid
+  owner        User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  collectionId String?
+  collection   Collection?       @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+
+  royaltySplits RoyaltySplit[]
+
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([ownerId])
+  @@index([collectionId])
+  @@index([status])
+}
+
+model RoyaltySplit {
+  id            String      @id @default(cuid())
+  certificateId String
+  certificate   Certificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+  payeeAddress  String
+  basisPoints   Int         // e.g. 500 = 5%
+  label         String?
+
+  @@index([certificateId])
+}
