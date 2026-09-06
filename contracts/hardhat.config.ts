@@ -1,5 +1,9 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import * as dotenv from "dotenv";
+
+// Load the Next.js app's .env (one level up) so we keep a single secrets file.
+dotenv.config({ path: "../.env" });
 
 const {
   DEPLOYER_PRIVATE_KEY,
@@ -9,8 +13,12 @@ const {
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.24",
-    settings: { optimizer: { enabled: true, runs: 200 } },
+    version: "0.8.28",
+    settings: {
+      optimizer: { enabled: true, runs: 200 },
+      // Base (mainnet + Sepolia) supports Cancun opcodes; OZ v5.1+ needs mcopy.
+      evmVersion: "cancun",
+    },
   },
   networks: {
     baseSepolia: {
