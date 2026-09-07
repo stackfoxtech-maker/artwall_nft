@@ -2,28 +2,61 @@ import "server-only";
 import {
   createPublicClient,
   http,
+  defineChain,
   parseAbiItem,
   type Hex,
   type Address,
 } from "viem";
-import { base, baseSepolia, polygon, polygonAmoy } from "viem/chains";
 
-const CHAINS = { [base.id]: base, [baseSepolia.id]: baseSepolia, [polygon.id]: polygon, [polygonAmoy.id]: polygonAmoy } as const;
+// Minimal chain definitions — deliberately NOT importing `viem/chains`, whose
+// barrel drags the (unused) tempo chains + `ox/tempo` dynamic-require graph into
+// every module that touches this file, wrecking dev compile times.
+const CHAINS = {
+  8453: defineChain({
+    id: 8453,
+    name: "Base",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: { default: { http: ["https://mainnet.base.org"] } },
+    blockExplorers: { default: { name: "BaseScan", url: "https://basescan.org" } },
+  }),
+  84532: defineChain({
+    id: 84532,
+    name: "Base Sepolia",
+    testnet: true,
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: { default: { http: ["https://sepolia.base.org"] } },
+    blockExplorers: {
+      default: { name: "BaseScan", url: "https://sepolia.basescan.org" },
+    },
+  }),
+  137: defineChain({
+    id: 137,
+    name: "Polygon",
+    nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
+    rpcUrls: { default: { http: ["https://polygon-rpc.com"] } },
+  }),
+  80002: defineChain({
+    id: 80002,
+    name: "Polygon Amoy",
+    testnet: true,
+    nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
+    rpcUrls: { default: { http: ["https://rpc-amoy.polygon.technology"] } },
+  }),
+} as const;
 
 export const DEFAULT_CHAIN_ID = Number(
-  process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID ?? baseSepolia.id,
+  process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID ?? 84532,
 );
 
 export const NFT_CONTRACT_ADDRESS = (
   process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS ?? ""
 ).toLowerCase() as Address;
 
-/** Per-chain RPC. Falls back to the chain's public RPC if no private one is set. */
 function rpcUrl(chainId: number): string | undefined {
-  if (chainId === baseSepolia.id) return process.env.BASE_SEPOLIA_RPC_URL;
-  if (chainId === base.id) return process.env.BASE_RPC_URL;
-  if (chainId === polygon.id) return process.env.POLYGON_RPC_URL;
-  if (chainId === polygonAmoy.id) return process.env.POLYGON_AMOY_RPC_URL;
+  if (chainId === 84532) return process.env.BASE_SEPOLIA_RPC_URL;
+  if (chainId === 8453) return process.env.BASE_RPC_URL;
+  if (chainId === 137) return process.env.POLYGON_RPC_URL;
+  if (chainId === 80002) return process.env.POLYGON_AMOY_RPC_URL;
   return undefined;
 }
 

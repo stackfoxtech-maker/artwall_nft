@@ -36,7 +36,9 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  experimental: { instrumentationHook: true },
+  experimental: {
+    optimizePackageImports: ["wagmi", "@rainbow-me/rainbowkit", "lucide-react"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

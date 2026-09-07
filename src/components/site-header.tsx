@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { signOut } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
-import { WalletConnectButton } from "@/components/wallet-connect-button";
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
@@ -19,7 +18,6 @@ export async function SiteHeader() {
               <Link href="/dashboard">
                 <Button variant="ghost">Dashboard</Button>
               </Link>
-              <WalletConnectButton />
               <span className="hidden text-sm text-muted-foreground sm:inline">
                 {user.email}
               </span>

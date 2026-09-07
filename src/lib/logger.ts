@@ -1,7 +1,12 @@
 /**
  * Minimal structured logger. Emits one JSON line per event so a log drain
- * (Axiom / Better Stack / Datadog) can parse it. Swap the sink for a real
- * transport when one is chosen; the call sites don't change.
+ * (Axiom / Better Stack / Datadog) can parse it.
+ *
+ * Error reporting to Sentry is intentionally NOT wired here — importing the
+ * Sentry SDK into a module that every route uses pulls the whole OpenTelemetry
+ * graph into every server bundle. Add Sentry via `npx @sentry/wizard` when
+ * ready; it configures capture through instrumentation + withSentryConfig
+ * without touching app code. (docs/production-readiness.md §09)
  */
 type Level = "debug" | "info" | "warn" | "error";
 
@@ -18,13 +23,6 @@ function emit(level: Level, msg: string, fields: Fields = {}) {
   });
   if (level === "error" || level === "warn") console.error(line);
   else console.log(line);
-
-  if (level === "error" && process.env.SENTRY_DSN) {
-    // Lazy import so the SDK is only loaded when a DSN is configured.
-    import("@sentry/nextjs")
-      .then((Sentry) => Sentry.captureMessage(msg, { level: "error", extra: fields }))
-      .catch(() => {});
-  }
 }
 
 export const log = {
