@@ -17,3 +17,6 @@ playwright-report
 .vercel
 .env*
 !.env.example
+
+.vercel
+.env*

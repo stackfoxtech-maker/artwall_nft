@@ -36,5 +36,17 @@ create trigger on_auth_user_created_artwall
 --   RoyaltySplit.royalty_bps_range   : "basisPoints" between 0 and 10000
 --   Certificate.chain_id_positive    : "chainId" is null or > 0
 
--- 4. NOT YET APPLIED — see supabase/least-privilege.sql for the dedicated
+-- 4. Shared-project auth patch  (migration: harden_public_handle_new_user_for_shared_auth)
+-- This project's OTHER app (exam-prep) also has an on_auth_users trigger,
+-- public.handle_new_user, that inserts into public."User" (email + name both
+-- NOT NULL). Artwall wallet/phone signups have no email, which made that
+-- trigger throw -> "Database error saving new user". Both trigger functions are
+-- now wrapped in `BEGIN ... EXCEPTION WHEN OTHERS THEN RAISE WARNING; END` so a
+-- failure in one never aborts the auth.users insert, and public.handle_new_user
+-- got a non-null `name` fallback. Verified: an emailless signup creates only an
+-- artwall."User" row, no exam-app rows.
+-- NOTE: email signups still create (harmless) rows in the exam app's tables.
+-- The real fix is a dedicated Supabase project for Artwall.
+
+-- 5. NOT YET APPLIED — see supabase/least-privilege.sql for the dedicated
 --    application DB role. Run that, then repoint DATABASE_URL / DIRECT_URL.
