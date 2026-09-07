@@ -1,0 +1,20 @@
+name: Reconcile mints
+
+# Vercel Hobby only allows a daily cron, which is too slow for stuck mints.
+# This hits the same endpoint every 10 minutes. Set the repo secrets
+# RECONCILE_URL (https://<deployment>/api/cron/reconcile-mints) and CRON_SECRET.
+# Remove this workflow once the project is on Vercel Pro (vercel.json cron).
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger reconcile sweep
+        run: |
+          curl -fsS -X GET "${{ secrets.RECONCILE_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
