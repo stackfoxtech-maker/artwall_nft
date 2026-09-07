@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LoginForm } from "./login-form";
+import { AuthPanel } from "./auth-panel";
 
 export default async function LoginPage({
   searchParams,
@@ -22,7 +22,7 @@ export default async function LoginPage({
           <CardTitle>Sign in</CardTitle>
         </CardHeader>
         <CardContent>
-          <LoginForm next={next} />
+          <AuthPanel next={next} />
         </CardContent>
       </Card>
     </main>
