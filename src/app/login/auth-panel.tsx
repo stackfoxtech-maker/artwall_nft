@@ -8,9 +8,14 @@ import { PhoneSignIn } from "@/components/phone-sign-in";
 
 type Method = "email" | "phone" | "wallet";
 
+// Phone/SMS login is only shown when an SMS provider is actually configured in
+// Supabase. Set NEXT_PUBLIC_ENABLE_PHONE_AUTH=true once Twilio (or another
+// provider) is working, including geo-permissions + DLT for the target country.
+const PHONE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_PHONE_AUTH === "true";
+
 const TABS: { id: Method; label: string }[] = [
   { id: "email", label: "Email" },
-  { id: "phone", label: "Phone" },
+  ...(PHONE_ENABLED ? [{ id: "phone" as const, label: "Phone" }] : []),
   { id: "wallet", label: "Wallet" },
 ];
 
@@ -19,7 +24,10 @@ export function AuthPanel({ next }: { next: string }) {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-3 gap-1 rounded-md bg-muted p-1">
+      <div
+        className="grid gap-1 rounded-md bg-muted p-1"
+        style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}
+      >
         {TABS.map((t) => (
           <button
             key={t.id}

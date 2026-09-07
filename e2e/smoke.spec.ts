@@ -9,7 +9,7 @@ test("landing page renders the pitch and CTAs", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Terms" })).toBeVisible();
 });
 
-test("login page offers email, phone and wallet methods", async ({ page }) => {
+test("login page offers email and wallet methods", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 
@@ -18,10 +18,6 @@ test("login page offers email, phone and wallet methods", async ({ page }) => {
   await page.getByRole("button", { name: "Create an account" }).click();
   await expect(page.getByRole("button", { name: "Create account" })).toBeVisible();
   await expect(page.getByText(/agree to the/i)).toBeVisible();
-
-  // Phone tab
-  await page.getByRole("button", { name: "Phone", exact: true }).click();
-  await expect(page.getByPlaceholder("+14155551234")).toBeVisible();
 
   // Wallet tab
   await page.getByRole("button", { name: "Wallet", exact: true }).click();
